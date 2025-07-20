@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
+import Navbar from "@/components/ui/navbar";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -25,9 +25,59 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
       >
-        {children}
+        <div
+          className="min-h-screen flex flex-col relative"
+          style={{
+            background:
+              "radial-gradient(circle at center, #0F3232 0%, #181717 100%)",
+            overflow: "hidden",
+          }}
+        >
+          <style>
+            {`
+              
+              .bg-card::before {
+                content: "";
+                position: absolute;
+                left: -10%;
+                bottom: -70%;
+                width: 600px;
+                height: 600px;
+                background: url("/CardBG.png") no-repeat center center;
+                background-size: 600px 600px;
+                opacity: 0.1;
+                transform: rotate(45deg);
+                pointer-events: none;
+                z-index: 0;
+                animation: slide-bg 1.2s cubic-bezier(0.4,0,0.2,1) 1;
+              }
+              .bg-card::after {
+                content: "";
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 400px;
+                height: 400px;
+                background: url("/CardBG2.png") no-repeat center center;
+                background-size: 400px 400px;
+                opacity: 0.12;
+                pointer-events: none;
+                z-index: 0;
+                animation:
+                  slideR-bg 1.2s cubic-bezier(0.4,0,0.2,1) 1,
+                  spin-bg 30s linear infinite reverse;
+              }
+            `}
+          </style>
+
+          <div className="bg-card w-full h-full relative z-0">
+            {/* Navbar และ Main content */}
+            <Navbar />
+            <div className="flex-1 flex flex-col relative z-10">{children}</div>
+          </div>
+        </div>
       </body>
     </html>
   );

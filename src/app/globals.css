@@ -1,15 +1,20 @@
 @import "tailwindcss";
 
-:root {
+@theme default {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
+  --color-primary: #0f3232;
+  --color-surface-panel: #313030;
+  --color-surface-panel-hover: #3a3939;
+  --color-surface-shell: #494242;
+  --color-brand-accent: #236c6b;
+  --color-hero-gradient-start: #0f3232;
+  --color-hero-gradient-end: #181717;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-primary-black:#181717;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +28,48 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.bg-hero {
+  background: radial-gradient(
+    circle at center,
+    var(--color-hero-gradient-start) 20%,
+    var(--color-hero-gradient-end) 100%
+  );
+  overflow: hidden;
+}
+
+.bg-card::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  bottom: -50%;
+  width: 600px;
+  height: 600px;
+  background: url("/CardBG.png") no-repeat center center;
+  background-size: 600px 600px;
+  opacity: 0.1;
+  transform: rotate(45deg);
+  pointer-events: none;
+  z-index: 50;
+  animation: slide-bg 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1;
+}
+
+.bg-card::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 400px;
+  height: 400px;
+  background: url("/CardBG2.png") no-repeat center center;
+  background-size: 400px 400px;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 10;
+  animation:
+    slideR-bg 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1,
+    spin-bg 30s linear infinite reverse;
 }
 
 @keyframes spin-bg {
@@ -61,5 +108,27 @@ body {
   }
 }
 .animate-slide-in {
-  animation: slide-in 0.3s cubic-bezier(0.4,0,0.2,1);
+  animation: slide-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-brand-accent) var(--color-surface-panel);
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  background: var(--color-surface-panel);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-brand-accent);
+  border-radius: 8px;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Webkit */
 }

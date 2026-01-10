@@ -1,135 +1,120 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Link from "next/link";
-import { use } from "react";
+import { use, useEffect } from "react";
+import { SEAT_POSITIONS } from "@/constant/player";
+import { PlayerSeat } from "@/components/table";
+import Navbar from "@/components/ui/navbar";
+import { useTablePlayer } from "@/lib/tanstack/queryTablePlayer";
+import { useSession } from "next-auth/react";
+import { useWebSocket } from "@/providers/webSocketProvider";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTable } from "@/lib/tanstack/queryTable";
 
 export default function Table({
   params: paramsPromise,
 }: {
-  params: Promise<{ mode: string; table: string }>;
+  params: Promise<{ mode: string; table: number }>;
 }) {
   const params = use(paramsPromise);
-  const tempLogic = true;
+  const tableId = params.table;
+  const { data: session } = useSession();
+  const { data: tablePlayers, isLoading: isPlayersLoading } = useTablePlayer(
+    session?.accessToken,
+    tableId
+  );
+  const { data: tableData, isLoading: isTableLoading } = useTable(
+    session?.accessToken,
+    tableId
+  );
 
-  type PlayerProps = {
-    positionTrue: string;
-    positionFalse: string;
-    avatarSrc: string;
-    playerName: string;
-    balance: string;
-  };
+  const queryClient = useQueryClient();
+  const stompClient = useWebSocket();
 
-  const Player: React.FC<PlayerProps> = ({
-    positionTrue,
-    positionFalse,
-    avatarSrc,
-    playerName,
-    balance,
-  }) => {
-    const position = tempLogic ? positionTrue : positionFalse;
+  useEffect(() => {
+    if (!stompClient.client || !stompClient.isConnected) return;
 
-    return (
-      <div className={`absolute ${position} flex flex-col items-center`}>
-        {tempLogic ? (
-          <div className="flex flex-col sm:flex-row rounded-4xl bg-surface-panel justify-center items-center py-1 px-2 sm:py-2 gap-1 sm:gap-3 border-1 border-amber-400 mb-2">
-            <Avatar className="w-10 h-10 md:w-15 md:h-15 lg:w-20 lg:h-20">
-              <AvatarImage src={avatarSrc} />
-              <AvatarFallback>?</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col items-center justify-center">
-              <span className="text-xs sm:text-xl">{playerName}</span>
-              <span className="text-xs sm:text-sm">{balance}</span>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-[#1E1E1E] rounded-full w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center border-1 border-[#7F7B7B]">
-            +
-          </div>
-        )}
-      </div>
+    console.log("Subscribing to table updates...");
+
+    const subscription = stompClient.client.subscribe(
+      "/topic/notifications",
+      (message) => {
+        const notification = JSON.parse(message.body);
+        console.log("Received notification:", notification);
+
+        if (notification.type === `TABLE${tableId}_JOINED`) {
+          console.log(notification.content);
+          queryClient.invalidateQueries({
+            queryKey: ["tablePlayers", tableId],
+          });
+        }
+      }
     );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [stompClient, queryClient, tableId]);
+
+  const getPlayerAtSeat = (seatIndex: number) => {
+    if (!tablePlayers || !Array.isArray(tablePlayers)) return null;
+    return tablePlayers.find((p) => p.seatNumber === seatIndex);
   };
 
+  if (!tableData || isPlayersLoading || isTableLoading) {
+    return <div>Loading table...</div>; 
+  }
   return (
-    <div className="w-full flex flex-1 flex-col justify-center items-center px-4 pt-8">
-      <div className="w-full flex flex-col justify-center items-center px-4 pt-8 gap-20 md:gap-30">
+    <div className="w-full min-h-screen flex flex-col items-center">
+      <div className="w-full absolute top-0 z-40">
+        <Navbar />
+      </div>
+      {/* Header / Navigation */}
+      <div className="w-full p-4 absolute top-0 left-0 z-50 pointer-events-none">
         <Link
           href={`/${params.mode}`}
-          className="absolute top-4 left-4 z-20 bg-surface-panel hover:bg-brand-accent text-white rounded-full p-2 px-4 shadow transition cursor-pointer flex items-center gap-2"
-          aria-label="ย้อนกลับ"
+          className="inline-flex items-center gap-2 bg-surface-panel hover:bg-brand-accent text-white rounded-full p-2 px-4 shadow-md transition-colors pointer-events-auto"
+          aria-label="Back"
         >
           <ArrowBackIcon />
+          <span className="hidden sm:inline">Back</span>
         </Link>
       </div>
-      <div className="relative w-full h-[500px] sm:w-[700px] sm:h-[450px] lg:w-[900px] lg:h-[500px] mx-auto">
-        {/* โต๊ะกลาง */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[500px] sm:w-[600px] sm:h-[350px] lg:w-[800px] lg:h-[400px] rounded-[45%/40%] bg-primary-black border-4 border-[#236C6B]" />
 
-        {/* Players */}
-        <Player
-          positionFalse="left-1/2 bottom-[-15%] -translate-x-1/2"
-          positionTrue="left-1/2 bottom-[-15%] -translate-x-1/2  sm:bottom-[-15%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 1"
-          balance="9999 $"
-        />
-        <Player
-          positionFalse="right-[5%] bottom-[5%]"
-          positionTrue="right-[5%] bottom-[5%] sm:right-[-5%] sm:bottom-[-5%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 2"
-          balance="8888 $"
-        />
-        <Player
-          positionFalse="top-[40%] right-[-8%]"
-          positionTrue="right-[-4%] top-[40%]  sm:top-[40%] sm:right-[-18%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 3"
-          balance="7777 $"
-        />
-        <Player
-          positionFalse="right-[5%] top-[5%]"
-          positionTrue="right-[5%] top-[5%] sm:right-[-5%] sm:top-[-5%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 4"
-          balance="6666 $"
-        />
-        <Player
-          positionFalse="right-[20%] sm:right-[30%] top-[-10%]"
-          positionTrue="right-[20%] sm:right-[25%] top-[-15%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 5"
-          balance="5555 $"
-        />
-        <Player
-          positionFalse="left-[20%] sm:left-[30%] top-[-10%]"
-          positionTrue="left-[20%] sm:left-[25%] top-[-15%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 6"
-          balance="4444 $"
-        />
-        <Player
-          positionFalse="left-[5%] top-[5%]"
-          positionTrue="left-[5%] top-[5%] sm:left-[-5%] sm:top-[-5%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 7"
-          balance="3333 $"
-        />
-        <Player
-          positionFalse="left-[-8%] sm:left-[-10%] top-[40%]"
-          positionTrue="left-[-4%] top-[40%] sm:left-[-18%] "
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 8"
-          balance="2222 $"
-        />
-        <Player
-          positionFalse="left-[5%] bottom-[5%]"
-          positionTrue="left-[5%] bottom-[5%] sm:left-[-5%] sm:bottom-[-5%]"
-          avatarSrc="https://github.com/shadcn.png"
-          playerName="Player 9"
-          balance="1111 $"
-        />
+      {/* Poker Table Container */}
+      <div className="flex-1 flex items-center justify-center w-full overflow-hidden py-20">
+        <div className="relative w-[95vw] h-[500px] sm:w-[700px] sm:h-[450px] lg:w-[900px] lg:h-[500px]">
+          {/* Table Surface */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[500px] sm:w-[600px] sm:h-[350px] lg:w-[800px] lg:h-[400px] rounded-[45%/40%] bg-primary-black border-4 border-[#236C6B] shadow-2xl">
+            {/* Optional: Add table logo or community cards area here */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
+              <span className="text-4xl font-bold text-[#236C6B]">POKER</span>
+            </div>
+          </div>
+
+          {/* Render Seats */}
+          {SEAT_POSITIONS.map((seat, idx) => {
+            const player = getPlayerAtSeat(idx);
+            return (
+              <PlayerSeat
+                key={seat.id}
+                positionTrue={seat.positionTrue}
+                positionFalse={seat.positionFalse}
+                avatarSrc={
+                  player?.profileImageUrl || "https://github.com/shadcn.png"
+                }
+                playerName={player?.username || seat.defaultName}
+                balance={player ? `${player.stax} $` : seat.defaultBalance}
+                isOccupied={!!player}
+                seatNumber={idx}
+                tableIdProp={tableId}
+                mode={params.mode}
+                minBuyIn={tableData.minBuyIn}
+                maxBuyIn={tableData.maxBuyIn}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

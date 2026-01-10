@@ -35,16 +35,16 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Background>
-          <WebSocketProvider>
-            <TanstackProvider>
-              <NextAuthProvider session={session}>
+        <NextAuthProvider session={session}>
+          <Background>
+            <WebSocketProvider>
+              <TanstackProvider>
                 {children}
                 <Toaster />
-              </NextAuthProvider>
-            </TanstackProvider>
-          </WebSocketProvider>
-        </Background>
+              </TanstackProvider>
+            </WebSocketProvider>
+          </Background>
+        </NextAuthProvider>
       </body>
     </html>
   );

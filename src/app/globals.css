@@ -8,13 +8,16 @@
   --color-surface-panel-hover: #3a3939;
   --color-surface-shell: #494242;
   --color-brand-accent: #236c6b;
+  --color-brand-accent-hover: #1a5251;
   --color-hero-gradient-start: #0f3232;
   --color-hero-gradient-end: #181717;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --color-primary-black:#181717;
+  --color-primary-black: #181717;
+  --color-border-grey: #7f7b7b;
+  --color-primary-red: #dc2626;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -51,7 +54,7 @@ body {
   opacity: 0.1;
   transform: rotate(45deg);
   pointer-events: none;
-  z-index: 50;
+  z-index: 10;
   animation: slide-bg 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1;
 }
 
@@ -67,8 +70,7 @@ body {
   opacity: 0.12;
   pointer-events: none;
   z-index: 10;
-  animation:
-    slideR-bg 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1,
+  animation: slideR-bg 1.2s cubic-bezier(0.4, 0, 0.2, 1) 1,
     spin-bg 30s linear infinite reverse;
 }
 

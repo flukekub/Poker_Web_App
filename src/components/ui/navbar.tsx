@@ -1,39 +1,64 @@
 "use client";
-import { useEffect, useState , useRef} from "react";
+import { useEffect, useState, useRef } from "react";
 import { Menu } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PaidIcon from "@mui/icons-material/Paid";
 import Divider from "@mui/material/Divider";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
-import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded';
-import { LogIn } from 'lucide-react';
+import HowToRegRoundedIcon from "@mui/icons-material/HowToRegRounded";
+import { LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useMe } from "@/lib/tanstack/queryUser";
+import { useWebSocket } from "@/providers/webSocketProvider";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Navbar() {
   const [showMenu, setShowMenu] = useState(false);
   const { data: session, status } = useSession();
-  const [ userName, setUserName ] = useState(session?.user?.name || "Guest");
-  const [ userImage, setUserImage ] = useState(session?.user?.profilePicture || "https://github.com/shadcn.png");
+  const { data: userProfile } = useMe();
+
   const router = useRouter();
-  const [ chips, setChips ] = useState(session?.user?.chips);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [ contentWidth, setContentWidth ] = useState("");
+  const [contentWidth, setContentWidth] = useState("");
+
+  const queryClient = useQueryClient();
+  const stompClient = useWebSocket();
+  const userId = session?.user?._id;
+
+  const userName = userProfile?.name || session?.user?.name || "Guest";
+  const userImage =
+    userProfile?.profilePicture ||
+    session?.user?.profilePicture ||
+    "https://github.com/shadcn.png";
+  const chips = userProfile?.chips ?? session?.user?.chips;
 
   useEffect(() => {
-    if ( session ){
-      setUserName(session.user.name || "Guest");
-      setChips(session.user.chips);
-      setUserImage(session.user.profilePicture || "" )
-    }
-  }, [session]);
+    if (!stompClient.client || !stompClient.isConnected || !userId) return;
+
+    const subscription = stompClient.client.subscribe(
+      "/topic/notifications",
+      (message) => {
+        const notification = JSON.parse(message.body);
+        if (notification.type === `USER_${userId}_CHIPS_UPDATED`) {
+          console.log("Chips updated notification received");
+          queryClient.invalidateQueries({ queryKey: ["me"] });
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [stompClient, queryClient, userId]);
+
   useEffect(() => {
     if (menuRef.current) {
       setContentWidth(menuRef.current.offsetWidth.toString());
       console.log("Menu width:", menuRef.current.offsetWidth);
     }
-
   }, [chips]);
+
   return (
     <header className="flex h-[64px] relative z-10">
       <div className="flex flex-1 items-center"></div>
@@ -48,7 +73,7 @@ export default function Navbar() {
             <LogIn />
             Sign in
           </button>
-          
+
           <Divider
             orientation="vertical"
             sx={{ borderColor: "white", opacity: 0.6 }}
@@ -64,7 +89,6 @@ export default function Navbar() {
             Sign up
             <HowToRegRoundedIcon className="text-white " />
           </button>
-          
         </div>
       ) : (
         <div
@@ -73,7 +97,6 @@ export default function Navbar() {
             (showMenu ? "rounded-tl-4xl" : "rounded-l-4xl")
           }
           ref={menuRef}
-          
         >
           <PaidIcon fontSize="large" />
           <span className="text-white text-lg font-medium">{chips}</span>
@@ -115,7 +138,7 @@ export default function Navbar() {
 const Content = ({
   onSignOut,
   authenticated,
-  width ,
+  width,
 }: {
   onSignOut: () => void;
   authenticated: boolean;

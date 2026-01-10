@@ -1,5 +1,4 @@
 "use client";
-import PersonIcon from "@mui/icons-material/Person";
 //import { useEffect } from "react";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Navbar from "@/components/ui/navbar";
@@ -11,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useWebSocket } from "@/providers/webSocketProvider";
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import JoinTableButton from "@/components/joinTableBotton";
 
 export default function SelectTablePage({
   params: gameMode,
@@ -118,47 +118,54 @@ export default function SelectTablePage({
           gameMode={gameMode.mode}
         />
         <div className="w-full max-w-full md:w-[800px] bg-surface-shell rounded-3xl shadow-lg p-5">
-          <ul className="space-y-2">
-            {tableData.map((table) => (
-              <li
-                key={table.tableId}
-                className="p-4 md:pl-10 bg-surface-panel md:rounded-2xl rounded-3xl hover:bg-surface-panel-hover transition grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4"
-              >
-                <div className="md:col-span-1 text-center md:text-left">
-                  <h2 className="text-xl font-semibold text-white">
-                    {table.tableName}
-                  </h2>
-                  <p className="text-sm text-gray-400">{table.gameType}</p>
-                </div>
-                <div className="md:col-span-1 text-center md:text-left">
-                  <p className="text-gray-300">
-                    Buy-in range: {table.minBuyIn} – {table.maxBuyIn} chips
-                  </p>
-                  <p
-                    className="text-xs text-gray-500"
-                    suppressHydrationWarning={true}
-                  >
-                    Created: {new Date(table.createdAt).toLocaleString()}
-                  </p>
-                </div>
-                <div className="md:col-span-1 flex justify-center">
-                  <span className="px-4 py-2 bg-brand-accent text-white rounded-xl transition w-full md:w-auto text-center">
-                    Min: {table.minBuyIn} / Max: {table.maxBuyIn}
-                  </span>
-                </div>
-                <div className="md:col-span-1 flex justify-center md:justify-end">
-                  <button
-                    className="px-4 py-2 bg-white text-primary font-bold rounded-3xl transition flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer disabled:opacity-60"
-                    disabled={!table.isActive}
-                    onClick={() => handleJoin(table.tableId)}
-                  >
-                    {table.currentPlayers}/{table.maxPlayers} players
-                    <PersonIcon fontSize="small" />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {tableData.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-white text-lg mb-2">No tables available</p>
+              <p className="text-gray-500 text-sm">
+                Create a new table to start playing!
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {tableData.map((table) => (
+                <li
+                  key={table.tableId}
+                  className="p-4 md:pl-10 bg-surface-panel md:rounded-2xl rounded-3xl hover:bg-surface-panel-hover transition grid grid-cols-1 md:grid-cols-4 items-center gap-2 md:gap-4"
+                >
+                  <div className="md:col-span-1 text-center md:text-left">
+                    <h2 className="text-xl font-semibold text-white">
+                      {table.tableName}
+                    </h2>
+                    <p className="text-sm text-gray-400">{table.gameType}</p>
+                  </div>
+                  <div className="md:col-span-1 text-center md:text-left">
+                    <p className="text-gray-300">
+                      Buy-in range: {table.minBuyIn} – {table.maxBuyIn} chips
+                    </p>
+                    <p
+                      className="text-xs text-gray-500"
+                      suppressHydrationWarning={true}
+                    >
+                      Created: {new Date(table.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="md:col-span-1 flex justify-center">
+                    <span className="px-4 py-2 bg-brand-accent text-white rounded-xl transition w-full md:w-auto text-center">
+                      Min: {table.minBuyIn} / Max: {table.maxBuyIn}
+                    </span>
+                  </div>
+                  <div className="md:col-span-1 flex justify-center md:justify-end">
+                    <JoinTableButton
+                      tableId={table.tableId}
+                      maxPlayers={table.maxPlayers}
+                      isActive={table.isActive}
+                      onJoin={handleJoin}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </>

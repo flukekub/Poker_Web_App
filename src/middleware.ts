@@ -13,7 +13,6 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token }) => {
-        console.log("Middleware check token:", token);
         return !!token // ถ้าไม่มี Token ให้ Redirect ไปหน้า Login ทันที
       },
     },
@@ -33,7 +32,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - login (login page) -> ต้องปล่อย login ด้วย ไม่งั้น Loop ตาย
+     * -.png (image files) -> ปล่อยไฟล์รูปภาพผ่าน
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|login|auth|$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|login|auth|$|.*\\.png$).*)",
   ],
 }

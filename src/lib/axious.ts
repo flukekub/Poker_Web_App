@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080", // ใช้ URL จาก .env.local หรือค่าเริ่มต้น
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080/", // ใช้ URL จาก .env.local หรือค่าเริ่มต้น
   timeout: 5000, // Set a timeout of 5 seconds
   headers: {
     

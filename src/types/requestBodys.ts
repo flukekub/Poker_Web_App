@@ -26,3 +26,14 @@ export type TablePlayer = {
   profileImageUrl: string;
   username: string;
 };
+
+export type CardDto = {
+  suit: string; 
+  rank: string; 
+}
+
+export type CardResponse = {
+  cards:CardDto[];
+}
+
+

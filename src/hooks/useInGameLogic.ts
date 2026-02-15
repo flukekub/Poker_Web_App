@@ -1,24 +1,13 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useCallback } from "react";
 import { useWebSocket } from "@/providers/webSocketProvider";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { CardDto, CardResponse } from "@/types/requestBodys";
+
 
 export const useInGameLogic = (tableId: number, gameTableId: number) => {
   const queryClient = useQueryClient();
   const stompClient = useWebSocket();
-  const [drawnCards, setDrawnCards] = useLocalStorage<CardDto[]>(
-    `gameTable-${gameTableId}-cards`,
-    []
-  );
-  const drawnCardsRef = useRef<CardDto[]>(drawnCards);
 
-  // Sync ref กับ state
-  useEffect(() => {
-    drawnCardsRef.current = drawnCards;
-  }, [drawnCards]);
 
-  // จัดการการส่ง Message
   const sendWSMessage = useCallback(
     (destination: string, extraPayload: object = {}) => {
       if (stompClient.client?.connected) {
@@ -28,7 +17,7 @@ export const useInGameLogic = (tableId: number, gameTableId: number) => {
         });
       }
     },
-    [stompClient.client, gameTableId, tableId]
+    [stompClient.client, gameTableId, tableId],
   );
 
   useEffect(() => {
@@ -37,9 +26,10 @@ export const useInGameLogic = (tableId: number, gameTableId: number) => {
     const client = stompClient.client;
 
     const subs = [
-      // 1. Notification Sub
+
       client.subscribe("/topic/notifications", (msg) => {
         const note = JSON.parse(msg.body);
+        console.log(note,"zaza");
         if (note.type === `TABLE${tableId}_JOINED`) {
           queryClient.invalidateQueries({
             queryKey: ["tablePlayers", tableId],
@@ -47,45 +37,32 @@ export const useInGameLogic = (tableId: number, gameTableId: number) => {
         }
       }),
 
-      // 2. Card Draw Sub
-      client.subscribe(`/topic/game/${gameTableId}/card`, (msg) => {
-        const response: CardResponse = JSON.parse(msg.body);
-        const newCardsFromBackend = response.cards || [];
-        setDrawnCards((prev) => {
-          const filteredNewCards = newCardsFromBackend.filter(
-            (newCard) =>
-              !prev.some(
-                (existing) =>
-                  existing.rank === newCard.rank &&
-                  existing.suit === newCard.suit
-              )
-          );
-
-          if (filteredNewCards.length === 0) return prev;
-          return [...prev, ...filteredNewCards];
-        });
-      }),
-
-      // 3. Reset Deck Sub
-      client.subscribe(`/topic/game/${gameTableId}/deckReset`, () => {
-        setDrawnCards([]);
-      }),
+      // client.subscribe(`/topic/game/${gameTableId}/deckReset`, () => { เป็นตัวอย่างเผื่อลืม
+      //   setDrawnCards([]);
+      // }),
     ];
 
     return () => subs.forEach((s) => s.unsubscribe());
   }, [
+    stompClient.client,
     stompClient.isConnected,
     tableId,
     gameTableId,
     queryClient,
-    setDrawnCards,
   ]);
 
   return {
-    drawnCards,
-    drawCard: (amount: number = 1) =>
-      sendWSMessage("/app/game/draw", { cardAmount: amount }),
-    clearCards: () => sendWSMessage("/app/game/resetDeck"),
+    //clearCards: () => sendWSMessage("/app/game/resetDeck"),
+    startGame: (
+      dealerSeatNumber: number,
+      smallBlindAmount: number,
+      bigBlindAmount: number,
+    ) =>
+      sendWSMessage("app/game/start", {
+        dealerSeatNumber,
+        smallBlindAmount,
+        bigBlindAmount,
+      }),
     isConnected: stompClient.isConnected,
   };
 };

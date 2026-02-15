@@ -69,7 +69,6 @@ export default function Table({
       <div className="w-full absolute top-0 z-40">
         <Navbar />
       </div>
-      {/* Header / Navigation */}
       <div className="w-full p-4 absolute top-0 left-0 z-50 pointer-events-none">
         <Link
           href={`/${params.mode}`}
@@ -81,18 +80,13 @@ export default function Table({
         </Link>
       </div>
 
-      {/* Poker Table Container */}
       <div className="flex-1 flex items-center justify-center w-full overflow-hidden py-20">
         <div className="relative w-[95vw] h-[500px] sm:w-[700px] sm:h-[450px] lg:w-[900px] lg:h-[500px]">
-          {/* Table Surface */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[500px] sm:w-[600px] sm:h-[350px] lg:w-[800px] lg:h-[400px] rounded-[45%/40%] bg-primary-black border-4 border-[#236C6B] shadow-2xl">
-            {/* Optional: Add table logo or community cards area here */}
             <div className="absolute inset-0 flex items-center justify-center opacity-20 pointer-events-none">
               <span className="text-4xl font-bold text-[#236C6B]">POKER</span>
             </div>
           </div>
-
-          {/* Render Seats */}
           {SEAT_POSITIONS.map((seat, idx) => {
             const player = getPlayerAtSeat(idx);
             return (

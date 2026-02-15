@@ -67,11 +67,11 @@ export default function JoinTableButton({
   return (
     <button
       className="px-4 py-2 bg-white text-primary font-bold rounded-3xl transition flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer disabled:opacity-60 hover:bg-gray-100"
-      disabled={!isActive}
+      disabled={!isActive || isTableLoading}
       onClick={() => onJoin(tableId)}
       suppressHydrationWarning={true}
     >
-      {tableData?.currentPlayers}/{maxPlayers} players
+      {isTableLoading ? 0 : tableData?.currentPlayers}/{maxPlayers} players
       <PersonIcon fontSize="small" />
     </button>
   );

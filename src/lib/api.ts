@@ -153,7 +153,7 @@ export const getTablePlayersByTableId = async (
   tableId: number
 ) => {
   try {
-    const response = await api.get(`/api/games/tablePlayer/`, {
+    const response = await api.get(`/api/games/tablePlayer`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -204,3 +204,20 @@ export const updateChipsBalance = async (
   }
 };
 
+export const deletePlayer = async (
+  token: string|undefined,
+  tablePlayerId: number
+) => {
+  try {
+    const response = await api.delete(`/api/games/tablePlayer`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      params: { tablePlayerId },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Failed to delete table players:", error);
+    throw error;
+  }
+};

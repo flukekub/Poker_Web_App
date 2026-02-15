@@ -1,7 +1,6 @@
 "use client";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import Link from "next/link";
-import { use, useEffect, useState, useRef } from "react";
+
+import { use, useEffect } from "react";
 import { INGAME_PLAYER_POSITIONS } from "@/constant/player";
 import { PlayerIngameSeat } from "@/components/playerIngameSeat";
 import { useTablePlayer } from "@/lib/tanstack/queryTablePlayer";
@@ -11,8 +10,7 @@ import BottomPanel from "@/components/section/inGame/bottomPanel";
 import { TablePlayer } from "@/types/requestBodys";
 import { getRotatedSeatIndex } from "@/lib/utils/gameUtils";
 import { useInGameLogic } from "@/hooks/useInGameLogic";
-import { CardDto } from "@/types/requestBodys";
-import { CardItem } from "@/components/section/inGame/CardItem";
+import { HeadPanel } from "@/components/section/inGame/headPanel";
 
 export default function InGamePage({
   params: paramsPromise,
@@ -23,64 +21,46 @@ export default function InGamePage({
   const { data: session } = useSession();
   const { data: tablePlayers, isLoading: isPlayersLoading } = useTablePlayer(
     session?.accessToken,
-    params.table
+    params.table,
   );
   const { data: tableData, isLoading: isTableLoading } = useTable(
     session?.accessToken,
-    params.table
+    params.table,
   );
-  const { drawnCards, drawCard, clearCards } = useInGameLogic(
+  const { startGame } = useInGameLogic(
     Number(params.table),
-    Number(params.gameTable)
+    Number(params.gameTable),
   );
-
-  useEffect(() => {
-    console.log("Current drawn cards:", drawnCards);
-  }, [drawnCards]);
 
   const currentUser = tablePlayers?.find(
-    (p: TablePlayer) => p.userId === Number(session?.user?._id)
+    (p: TablePlayer) => p.userId === Number(session?.user?._id),
   );
 
-  if (!tableData || isPlayersLoading || isTableLoading) {
+
+  if (!tableData || isPlayersLoading || isTableLoading || !currentUser) {
     return <div>Loading table...</div>;
   }
+
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full p-4 absolute top-0 left-0 z-50 pointer-events-none">
-        <Link
-          href={`/${params.mode}`}
-          className="inline-flex items-center gap-2 bg-surface-panel hover:bg-brand-accent text-white rounded-full p-2 px-4 shadow-md transition-colors pointer-events-auto"
-          aria-label="Back"
-        >
-          <ArrowBackIcon />
-          <span className="hidden sm:inline">Back</span>
-        </Link>
-      </div>
-
+      <HeadPanel
+        gameMode={params.mode}
+        tablePlayerId={currentUser.tablePlayerId}
+        token={session?.accessToken}
+      />
       <div className="flex-1 flex items-center justify-center w-full overflow-hidden py-20">
         <div className="relative w-[95vw] h-[500px] sm:w-[700px] sm:h-[450px] lg:w-[900px] lg:h-[500px]">
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[500px] sm:w-[600px] sm:h-[350px] lg:w-[800px] lg:h-[400px] rounded-[45%/40%] bg-primary-black border-4 border-[#236C6B] shadow-2xl">
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
               <div className="flex gap-2">
-                {drawnCards.map((card, i) => (
-                  <CardItem key={i} card={card} />
-                ))}
-              </div>
-
-              {/* Draw Card Button (for testing) */}
-              <div className="flex gap-2">
                 <button
-                  onClick={() => drawCard(1)}
-                  className="px-4 py-2 bg-brand-accent hover:bg-brand-accent/80 text-white rounded-lg font-semibold transition"
-                >
-                  Draw Card
-                </button>
-                <button
-                  onClick={clearCards}
+                  onClick={() => {
+                    startGame(0, tableData.bigBlind, tableData.smallBlind);
+                    console.log("check");
+                  }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
                 >
-                  Clear Cards
+                  Start game
                 </button>
               </div>
             </div>
@@ -90,10 +70,9 @@ export default function InGamePage({
             const visualPositionIndex = getRotatedSeatIndex(
               player.seatNumber,
               currentUser?.seatNumber,
-              INGAME_PLAYER_POSITIONS.length
+              INGAME_PLAYER_POSITIONS.length,
             );
             const seatPosition = INGAME_PLAYER_POSITIONS[visualPositionIndex];
-
             return (
               <PlayerIngameSeat
                 key={player.tablePlayerId}

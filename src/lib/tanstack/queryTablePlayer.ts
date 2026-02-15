@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTablePlayer, getTablePlayersByTableId } from "@/lib/api";
+import { createTablePlayer, getTablePlayersByTableId, deletePlayer } from "@/lib/api";
 
 export function useCreateTablePlayer(token: string) {
   const queryClient = useQueryClient();
@@ -34,3 +34,19 @@ export function useTablePlayer(token: string | undefined, tableId: number) {
     enabled: !!token && !!tableId,
   });
 }
+
+export function useDeleteTablePlayer (token: string|undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tablePlayerId: number) =>
+      deletePlayer(token, tablePlayerId),
+    onSuccess: (_, tablePlayerId) => {
+      queryClient.invalidateQueries({ queryKey: ["tablePlayers"] });
+      console.log("TablePlayer deleted successfully:", tablePlayerId);
+    },
+    onError: (error) => {
+      console.error("Failed to delete TablePlayer:", error);
+    },
+  });
+};

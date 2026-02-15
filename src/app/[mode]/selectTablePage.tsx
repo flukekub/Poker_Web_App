@@ -48,29 +48,22 @@ export default function SelectTablePage({
       (message) => {
         const notification = JSON.parse(message.body);
         console.log("Received notification:", notification);
-        // Check for your specific event type
-        // (Assuming your backend sends 'TABLE_UPDATED' when a table is created/joined)
+        
         if (notification.type === "TABLE_UPDATED") {
           console.log("Update received! Refetching tables...");
 
-          // IMPORTANT: This key must match the one in your useTables hook
           queryClient.invalidateQueries({
             queryKey: ["tables", gameMode.mode],
           });
         }
       }
     );
-
-    // Cleanup: Unsubscribe when the user leaves the page or component unmounts
     return () => {
       subscription?.unsubscribe();
     };
   }, [stompClient, queryClient, gameMode.mode]);
 
   const tableData = rawTables as TableRow[];
-  // useEffect(() => {
-  //   console.log("Tables data:", tableData);
-  // }, [tableData]);
   const router = useRouter();
   const handleJoin = (tableId: number) => {
     if (!tableId) return;
